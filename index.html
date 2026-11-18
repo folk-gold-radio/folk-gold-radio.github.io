@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Радио Наздраве</title>
+<title>Фолк Радио Наздраве и Gold Radio</title>
 <meta name="description" content="Слушайте Фолк Радио Наздраве и Gold Radio на живо">
 <meta name="theme-color" content="#141312">
 <link rel="manifest" href="manifest.webmanifest">
@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Наздраве">
+<meta name="apple-mobile-web-app-title" content="Наздраве и Gold">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 /* Layout: една колона, логото горе, голям бутон в центъра, после съобщение, таймер, споделяне */
@@ -156,7 +156,7 @@ h1:focus{outline:none}
 <main>
   <button class="back" id="back" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg>Всички радия</button>
   <img class="logo" id="logo" src="icon-512.png" alt="">
-  <h1 id="title" tabindex="-1">Радио Наздраве</h1>
+  <h1 id="title" tabindex="-1">Фолк Радио Наздраве и Gold Radio</h1>
 
   <section class="onboard" id="onboard" aria-labelledby="obTitle" hidden>
     <h2 id="obTitle"></h2>
@@ -252,7 +252,7 @@ h1:focus{outline:none}
 
 <script>
 /* ================= НАСТРОЙКИ ================= */
-const APP_NAME = "Радио Наздраве";   // името на приложението
+const APP_NAME = "Фолк Радио Наздраве и Gold Radio";   // името на приложението
 /* Радиата. За всяко: име, лого и линковете за слушане (само https://).
    Линковете са подредени от основния към резервните: приложението минава на следващия само,
    ако интернетът се дави или основният не работи. HLS се ползва само на iPhone и iPad. */
@@ -644,7 +644,7 @@ function hiddenUntil(k){ try{ return +localStorage.getItem("ob_"+k)||0; }catch(e
 function hideFor(k,days){ try{ localStorage.setItem("ob_"+k, Date.now()+days*864e5); }catch(e){} }
 
 function pickCard(){
-  if(justInstalled) return {k:"done", t:APP_NAME+" вече е на началния ви екран.", b:"<p>Отваряйте ни от иконката „Наздраве“, когато пожелаете. Благодарим, че сте с нас!</p>", later:false};
+  if(justInstalled) return {k:"done", t:APP_NAME+" вече е на началния ви екран.", b:"<p>Отваряйте ни от иконката „Наздраве и Gold“, когато пожелаете. Благодарим, че сте с нас!</p>", later:false};
   if(!STANDALONE){
     if(IN_APP) return {k:"inapp", t:"Отворете приложението в браузъра", b: "<p>Едно натискане и продължавате в "+(IS_IOS?"Safari":"Chrome")+", откъдето радиото се слага на телефона.</p>",
       a: IS_IOS ? "Отвори в Safari" : "Отвори в Chrome", fn: openExternal};
@@ -861,7 +861,7 @@ function loadOS(){
     sc.onerror=()=>resolve(null); document.head.appendChild(sc);
     OneSignalDeferred.push(async function(OneSignal){
       try{
-        await OneSignal.init({ appId: ONESIGNAL_APP_ID, serviceWorkerPath: DIR.slice(1)+"sw.js", serviceWorkerParam:{scope:DIR},
+        await OneSignal.init({ appId: ONESIGNAL_APP_ID, serviceWorkerPath: DIR.slice(1)+"OneSignalSDKWorker.js", serviceWorkerParam:{scope:DIR},
                                notifyButton:{enable:false}, promptOptions:{slidedown:{prompts:[]}} });
         OS = OneSignal;
         OneSignal.Notifications.addEventListener("permissionChange", refreshNotif);
@@ -918,10 +918,11 @@ async function disableNotif(){
 }
 if(ONESIGNAL_APP_ID){
   $("notifBtn").onclick = ()=>{ notifOn() ? disableNotif() : enableNotif(); };
-  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js",{scope:DIR}).catch(()=>{}); }
+  /* името на файла е това, което OneSignal очаква, за да не се сменят два файла на едно място */
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("OneSignalSDKWorker.js",{scope:DIR}).catch(()=>{}); }
   if(store("nz_push")==="1" || (PUSH_OK && Notification.permission==="granted")) loadOS();
   refreshNotif();
-} else if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+} else if("serviceWorker" in navigator){ navigator.serviceWorker.register("OneSignalSDKWorker.js").catch(()=>{}); }
 
 /* ===== Избор на радио =====
    Началният екран показва радиата. Адресът помни избора (#folk, #gold), затова бутонът „Назад“
