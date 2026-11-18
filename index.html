@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Радио Наздраве</title>
+<meta name="description" content="Слушайте Фолк радио Наздраве и Голд радио на живо">
+<meta name="theme-color" content="#0b0709">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Наздраве">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+/* Layout: една колона, логото горе, голям бутон в центъра, после съобщение, таймер, споделяне */
+:root{
+  --bg:#0b0709; --panel:#171013; --line:#33242a;
+  --fg:#f6eef0; --muted:#c3b2b7;
+  --red:#ff2a2a; --red-deep:#c3121a; --ok:#59d98e;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg)}
+body{
+  font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:max(24px,env(safe-area-inset-bottom,0px));
+  min-height:100%;
+  background:radial-gradient(120% 60% at 50% 0%,#2a0b0e 0%,var(--bg) 60%) var(--bg);
+}
+main{max-width:30rem;margin:0 auto;display:flex;flex-direction:column;gap:20px;padding-block:20px}
+.logo{width:min(70vw,260px);aspect-ratio:1;max-width:100%;margin:0 auto;border-radius:22%;
+  box-shadow:0 10px 50px rgba(255,42,42,.25);display:block}
+h1{font-size:1.6rem;margin:0;text-align:center;letter-spacing:.02em}
+.status{text-align:center;color:var(--muted);margin:0;min-height:1.5em}
+.status.live{color:var(--ok)}
+.now{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#2a0f14,var(--panel));border:1px solid var(--line);border-radius:18px;padding:12px;text-align:left;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.now .art{flex:0 0 76px;width:76px;height:76px;border-radius:12px;overflow:hidden;background:#1a0d10;display:grid;place-items:center;position:relative}
+.now .art img{width:100%;height:100%;object-fit:cover;display:block}
+.now .eq{display:flex;gap:4px;align-items:flex-end;height:30px}
+.now .eq i{width:6px;height:30%;background:var(--red);border-radius:2px}
+.now .meta{min-width:0;flex:1}
+.now .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:var(--red);font-weight:700;display:flex;align-items:center;gap:6px}
+.now .label .dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+.now .title{font-size:1.15rem;font-weight:800;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
+.now .artist{color:var(--muted);font-weight:600;margin-top:2px;overflow-wrap:anywhere}
+#play{
+  width:9.5rem;height:9.5rem;margin:4px auto;border-radius:50%;border:0;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,var(--red),var(--red-deep));color:#fff;
+  font-family:inherit;font-size:1.25rem;font-weight:700;line-height:1.2;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;
+  box-shadow:0 0 0 6px rgba(255,42,42,.15),0 14px 40px rgba(195,18,26,.45);
+}
+#play svg{width:2.6rem;height:2.6rem;fill:#fff}
+/* Анимации: само "леки" свойства (размер и прозрачност), които телефонът рисува почти без усилие.
+   Спират сами, ако в телефона е включено "Намаляване на движението". */
+#play{position:relative}
+#play::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid rgba(255,42,42,.55);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){
+  .now.playing .eq i{animation:eqb 1s ease-in-out infinite}
+  .now.playing .eq i:nth-child(2){animation-delay:-.4s}.now.playing .eq i:nth-child(3){animation-delay:-.7s}.now.playing .eq i:nth-child(4){animation-delay:-.2s}
+  @keyframes eqb{0%,100%{height:25%}50%{height:100%}}
+  .now.playing .label .dot{animation:pls 1.6s ease-in-out infinite}
+  @keyframes pls{0%,100%{opacity:1}50%{opacity:.3}}
+  #play.playing::after{animation:ring 2.4s ease-out infinite;will-change:transform,opacity}
+  .onboard .big{animation:nudge 3s ease-in-out infinite;will-change:transform}
+}
+@keyframes ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.18);opacity:0}}
+@keyframes nudge{0%,80%,100%{transform:none}88%{transform:scale(1.03)}}
+#play:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:4px}
+.msg{background:#2a1015;border:2px solid var(--red);border-radius:14px;padding:14px 16px}
+.msg h2{margin:0 0 4px;font-size:1rem;color:#ffb3b3}
+.msg p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+section.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+section.box h2{margin:0;font-size:1.05rem}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.chip{flex:1 1 5.5rem;min-height:48px;border-radius:12px;border:1px solid var(--line);background:#221820;color:var(--fg);font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--red-deep);border-color:var(--red)}
+.wide{width:100%;min-height:52px;border-radius:12px;border:1px solid var(--line);background:#221820;color:var(--fg);font-family:inherit;font-size:1.05rem;font-weight:600;cursor:pointer}
+.note{color:var(--muted);font-size:.9rem;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@keyframes pulse{50%{box-shadow:0 0 0 14px rgba(255,42,42,.08),0 14px 40px rgba(195,18,26,.45)}}
+body.ob .logo{width:min(38vw,150px)}
+body.ob main{gap:14px}
+.onboard{background:linear-gradient(160deg,#3a0d12,#1c0b0f);border:2px solid var(--red);border-radius:18px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(195,18,26,.3)}
+.onboard h2{margin:0;font-size:1.3rem;line-height:1.25}
+.onboard p{margin:0}
+.onboard ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:st}
+.onboard li{display:flex;gap:12px;align-items:center;counter-increment:st;font-size:1.02rem}
+.onboard li::before{content:counter(st);flex:0 0 2rem;height:2rem;border-radius:50%;background:var(--red-deep);display:grid;place-items:center;font-weight:700}
+.ico{display:inline-grid;place-items:center;width:1.9rem;height:1.9rem;border-radius:8px;background:#fff;color:#0a84ff;vertical-align:middle;margin:0 2px}
+.ico svg{width:1.2rem;height:1.2rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.big{width:100%;min-height:60px;border:0;border-radius:14px;background:#fff;color:#a10e15;font-family:inherit;font-size:1.15rem;font-weight:800;line-height:1.2;cursor:pointer}
+.later{background:none;border:0;color:var(--muted);font-family:inherit;font-size:.95rem;font-weight:600;padding:6px;cursor:pointer;align-self:center;text-decoration:underline}
+@keyframes nudge{0%,80%,100%{transform:none}88%{transform:scale(1.03)}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600}
+.field input,.field textarea{font:inherit;color:var(--fg);background:#221820;border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
+.field textarea{min-height:6.5rem;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid #fff;outline-offset:2px}
+.wide.on{background:var(--red-deep);border-color:var(--red);color:#fff}
+.wide[aria-disabled="true"]{background:#1a1416;color:#7d6d72;border-style:dashed;cursor:not-allowed}
+.send2{width:100%;min-height:52px;border:0;border-radius:12px;background:var(--red-deep);color:#fff;font-family:inherit;font-size:1.05rem;font-weight:700;cursor:pointer}
+.send2:disabled{opacity:.6}
+.send2.waiting{background:#1a1416;color:#a99aa0;border:1px dashed var(--line);cursor:not-allowed;font-weight:600}
+.kind{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0}
+.kind legend{font-weight:600;padding:0 6px}
+.kind label{display:flex;align-items:center;gap:10px;padding:8px 0}
+.kind input{width:1.3rem;height:1.3rem;accent-color:var(--red)}
+.paid{background:#2a1015;border:1px solid var(--red);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.paid h3{margin:0;font-size:1.05rem}
+.paid p{margin:0}
+.pay{display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:12px;background:#fff;color:#111;font-weight:800;text-decoration:none;font-size:1.05rem}
+.pay:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--red-deep);color:#fff;border-radius:6px;padding:1px 6px;margin-left:6px}
+.mine{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.mine li{background:#221820;border:1px solid var(--line);border-radius:12px;padding:10px 12px;overflow-wrap:anywhere}
+.mine .who{font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.mine .rep{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.mine .rep .who{color:#ffb3b3}
+h3.small{margin:4px 0 0;font-size:1rem}
+.free{display:inline-block;margin:0 0 8px;padding:3px 12px;border:1.5px solid var(--red);border-radius:999px;color:#ffb3b3;font-size:.9rem;font-weight:600}
+.airline{text-align:center;margin:0;font-weight:700;font-size:1.05rem}
+.chat{display:flex;flex-direction:column;gap:10px}
+.chatrow{display:flex;gap:8px;align-items:center}
+.chatrow input{flex:1;min-width:0;font:inherit;color:var(--fg);background:#221820;border:1px solid var(--line);border-radius:999px;padding:12px 16px}
+.chatrow input:focus{outline:3px solid #fff;outline-offset:2px}
+.sendbtn{flex:0 0 52px;width:52px;height:52px;border-radius:50%;border:0;background:var(--red-deep);display:grid;place-items:center;cursor:pointer}
+.sendbtn svg{width:24px;height:24px;fill:#fff}
+.sendbtn[aria-disabled="true"]{background:#2a2023;cursor:not-allowed}
+.sendbtn[aria-disabled="true"] svg{fill:#7d6d72}
+.sendbtn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.linkbtn{background:none;border:0;color:#ffb3b3;text-decoration:underline;font:inherit;padding:0 4px;cursor:pointer}
+#wCount{text-align:right;font-variant-numeric:tabular-nums}
+.support{text-align:center}
+.note a{color:#ffb3b3}
+.pick{display:flex;flex-direction:column;gap:14px}
+.pick h2{margin:0;font-size:1.15rem;text-align:center;color:var(--muted);font-weight:600}
+.rcard{display:flex;align-items:center;gap:16px;width:100%;min-height:96px;padding:14px;border-radius:18px;border:2px solid var(--line);background:linear-gradient(135deg,#2a0f14,var(--panel));color:var(--fg);font-family:inherit;text-align:left;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.rcard img{flex:0 0 68px;width:68px;height:68px;border-radius:16px;object-fit:cover;background:#1a0d10}
+.rcard .rn{display:block;font-size:1.25rem;font-weight:800;line-height:1.2}
+.rcard .rs{display:block;color:var(--muted);font-size:.95rem;margin-top:2px}
+.rcard.on{border-color:var(--red)}
+.rcard.on .rs{color:var(--ok);font-weight:700}
+.back{align-self:flex-start;display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 14px 6px 8px;border-radius:999px;border:1px solid var(--line);background:#221820;color:var(--fg);font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer}
+.back svg{width:22px;height:22px;fill:currentColor}
+h1:focus{outline:none}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <button class="back" id="back" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg>Всички радия</button>
+  <img class="logo" id="logo" src="icon-512.png" alt="">
+  <h1 id="title" tabindex="-1">Радио Наздраве</h1>
+
+  <section class="onboard" id="onboard" aria-labelledby="obTitle" hidden>
+    <h2 id="obTitle"></h2>
+    <div id="obBody"></div>
+    <button class="big" id="obAction" type="button" hidden></button>
+    <button class="later" id="obLater" type="button">Не сега</button>
+  </section>
+
+  <section class="pick" id="pick" aria-labelledby="pickTitle" hidden>
+    <h2 id="pickTitle">Изберете какво да слушате</h2>
+    <div id="pickList" class="pick"></div>
+  </section>
+
+  <div id="radioView" hidden style="display:contents">
+  <button id="play" type="button" aria-pressed="false">
+    <svg id="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    <span id="playText">Пусни</span>
+  </button>
+  <p id="airLine" class="airline" hidden></p>
+  <p id="status" class="status">Натиснете „Пусни“, за да слушате.</p>
+
+  <section class="now" id="nowBox" aria-label="Сега звучи" hidden>
+    <div class="art" aria-hidden="true"><img id="cover" alt="" hidden><div class="eq" id="eq"><i></i><i></i><i></i><i></i></div></div>
+    <div class="meta">
+      <div class="label"><span class="dot" aria-hidden="true"></span>Сега звучи</div>
+      <div class="title" id="song"></div>
+      <div class="artist" id="artist" hidden></div>
+    </div>
+  </section>
+
+  <div class="msg" id="msgBox" hidden>
+    <h2>Съобщение от радиото</h2>
+    <p id="msgText"></p>
+  </div>
+
+  <section class="box" aria-labelledby="tTitle">
+    <h2 id="tTitle">Таймер за заспиване</h2>
+    <div class="row" role="group" aria-labelledby="tTitle">
+      <button class="chip" type="button" data-min="15" aria-pressed="false">15 минути</button>
+      <button class="chip" type="button" data-min="30" aria-pressed="false">30 минути</button>
+      <button class="chip" type="button" data-min="60" aria-pressed="false">60 минути</button>
+      <button class="chip" type="button" data-min="0" aria-pressed="true">Изключен</button>
+    </div>
+    <p class="note" id="timerInfo">Таймерът е изключен.</p>
+  </section>
+
+  <section class="box" aria-labelledby="nTitle" id="notifBox" hidden>
+    <h2 id="nTitle">Известия от радиото</h2>
+    <p class="note" id="notifInfo">Научавайте първи за предаванията и новините на радиото и кога ще прозвучи вашият поздрав.</p>
+    <button class="wide" id="notifBtn" type="button">Включи известията</button>
+  </section>
+
+  <section class="box" aria-labelledby="wTitle" id="writeBox" hidden>
+    <h2 id="wTitle">Пиши ни</h2>
+    <p class="free">Поздравите в ефир са безплатни.</p>
+    <p class="note airtxt" id="wNote">Проверявам…</p>
+    <button class="wide" id="wToggle" type="button" aria-expanded="false" aria-controls="wForm">Напиши поздрав</button>
+    <div id="wForm" hidden class="chat">
+      <div id="wNameRow" class="field"><label for="wName">Твоето име</label><input id="wName" maxlength="40" autocomplete="given-name" enterkeyhint="next"></div>
+      <p class="note" id="wAs" hidden><span id="wAsText"></span> <button type="button" class="linkbtn" id="wAsChange">Смени</button></p>
+      <div class="chatrow">
+        <label for="wText" class="sr">Поздрав</label>
+        <input id="wText" maxlength="150" autocomplete="off" enterkeyhint="send" placeholder="Напиши поздрав…">
+        <button id="wSend" type="button" class="sendbtn" aria-label="Изпрати"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5 21 12 3 3.5l.01 6.6L15 12 3.01 13.9z"/></svg></button>
+      </div>
+      <p class="note" id="wCount" aria-hidden="true">0 / 150</p>
+      <p class="note" id="wWait" hidden></p>
+    </div>
+    <p class="note" id="wTip" hidden>Ако смяташ, че се справяме добре и искаш да ни подкрепиш, можеш да го направиш <a id="wTipLink" href="#" target="_blank" rel="noopener">тук</a>.</p>
+    <div id="wMine" hidden>
+      <h3 class="small" id="wMineTitle">Твоите поздрави</h3>
+      <ul class="mine" id="wList" aria-labelledby="wMineTitle"></ul>
+    </div>
+  </section>
+
+  </div>
+
+  <section class="box" aria-labelledby="sTitle">
+    <h2 id="sTitle">Покани приятел</h2>
+    <button class="wide" id="share" type="button">Сподели приложението</button>
+    <p class="note" id="shareInfo" hidden></p>
+    <p class="note support"><a id="supportLink" href="#" target="_blank" rel="noopener" hidden>Подкрепи радиото</a></p>
+  </section>
+
+  <p class="note" style="text-align:center">Звукът се усилва и намалява с бутоните на телефона.</p>
+</main>
+
+<!-- Говорни съобщения за екранния четец -->
+<div id="say" class="sr" aria-live="polite"></div>
+<div id="sayLoud" class="sr" role="alert"></div>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+/* ================= НАСТРОЙКИ ================= */
+const APP_NAME = "Радио Наздраве";   // името на приложението
+/* Радиата. За всяко: име, лого и линковете за слушане (само https://).
+   Линковете са подредени от основния към резервните: приложението минава на следващия само,
+   ако интернетът се дави или основният не работи. HLS се ползва само на iPhone и iPad. */
+const RADIOS = [
+  { id: "folk", name: "Фолк радио Наздраве", short: "Фолк", logo: "folk.png",
+    streams: [
+      { url: "https://nazdrave.123castbg.eu/hight",      mime: "audio/mpeg", name: "MP3 високо качество" },
+      { url: "https://nazdrave.123castbg.eu/stream",     mime: "audio/mpeg", name: "MP3" },
+      { url: "https://nazdrave.123castbg.eu/stream.aac", mime: "audio/aac",  name: "AAC" },
+    ] },
+  { id: "gold", name: "Голд радио", short: "Голд", logo: "gold.png",
+    streams: [
+      { url: "https://gold.123castbg.eu/stream",   mime: "audio/mpeg", name: "MP3" },
+      { url: "https://gold.123castbg.eu/streamcc", mime: "audio/aac",  name: "AAC" },
+    ] },
+];
+const ONESIGNAL_APP_ID = "";   // кодът на приложението от OneSignal (App ID)
+const SHOW_SONG  = true;   // false = никога да не се показва името на песента
+const MESSAGE_FILE = "saobshtenie.txt";       // файлът със съобщението до слушателите
+const MESSAGE_CHECK_SECONDS = 60;
+const MAILBOX_URL = "";   // адресът на пощенската кутия (Google Apps Script)
+/* ============================================= */
+
+const $ = id => document.getElementById(id);
+let R = null;                      // избраното радио
+function rName(){ return R ? R.name : APP_NAME; }
+function rLogo(){ return R ? R.logo : "icon-512.png"; }
+/* Поддържа ли телефонът известия (дефинирано най-отгоре, за да е готово навсякъде) */
+const PUSH_OK = ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window);
+const audio = $("audio"), playBtn = $("play");
+let wantPlaying = false, retry = 0, retryTimer = null, sleepTimer = null, sleepEnd = 0, sleepTick = null;
+
+/* Говорът за екранния четец: текстът изчезва след 5 секунди, за да не го прочете TalkBack/VoiceOver
+   втори път, когато се стигне с плъзгане до края на страницата. */
+const sayT={};
+function speak(id,t){ const el=$(id); clearTimeout(sayT[id]); el.textContent=""; setTimeout(()=>{ el.textContent=t; sayT[id]=setTimeout(()=>{ el.textContent=""; },5000); },50); }
+function say(t){ speak("say",t); }
+function sayLoud(t){ speak("sayLoud",t); }
+/* Променяме екрана САМО ако има реална разлика: иначе VoiceOver на iPhone преглежда страницата наново и засича. */
+function setText(el,t){ if(el && el.textContent!==t) el.textContent=t; }
+function setHid(el,h){ if(el && el.hidden!==!!h) el.hidden=!!h; }
+function setAttr(el,k,v){ if(!el) return; if(v===null){ if(el.hasAttribute(k)) el.removeAttribute(k); } else if(el.getAttribute(k)!==v) el.setAttribute(k,v); }
+function setStatus(t,live){ const s=$("status"); setText(s,t); if(s.classList.contains("live")!==!!live) s.classList.toggle("live",!!live); }
+
+let uiState=null;
+function setUi(playing){
+  if(uiState===!!playing) return; uiState=!!playing;
+  playBtn.setAttribute("aria-pressed",playing?"true":"false");
+  $("playText").textContent = playing ? "Спри" : "Пусни";
+  playBtn.setAttribute("aria-label", playing ? "Спри радиото" : "Пусни радиото");
+  $("ico").innerHTML = playing ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  playBtn.classList.toggle("playing",playing);
+  $("nowBox").classList.toggle("playing",playing);
+  if("mediaSession" in navigator) navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+}
+setUi(false);
+
+function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
+/* ===== Пускане на радиото =====
+   Основен начин: приложението само тегли потока и държи ~5 секунди звук в запас (като TuneIn и VLC),
+   за да не засича при кратко забавяне на интернета. Ако браузърът или сървърът не го позволят,
+   минава автоматично на обикновено пускане. */
+const BUFFER_START = 5, BUFFER_RESUME = 3, MAX_AHEAD = 25;
+let announced = false, starting = false, lastCT = -1, lastCTAt = 0, pausedAt = 0;
+let mse = null;   // текущото теглене: {ms, sb, ctrl, queue, done}
+/* На iPhone и iPad ползваме вградения плейър на Apple: той сам пази запас (като TuneIn) и не товари VoiceOver.
+   Собственото теглене със запас е само за Android и компютри. */
+const APPLE_MOBILE = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+let useMSE = !APPLE_MOBILE && !!(window.MediaSource && MediaSource.isTypeSupported);
+
+/* ===== Кой линк: според интернета ===== */
+let LINKS = [];   // линковете на избраното радио; HLS само там, където телефонът го пуска сам
+function setLinks(){ LINKS = (R ? R.streams : []).filter(x => /^https:\/\//.test(x.url) && !/СЛОЖИ/.test(x.url) && (!x.hls || APPLE_MOBILE)); qi = 0; ordered = false; }
+let qi = 0;                      // текущият линк в LINKS
+let stalls = [];                 // кога е засичало напоследък
+let failsHere = 0;               // поредни неуспехи да тръгне на този линк
+function cur(){ return LINKS[qi] || LINKS[0]; }
+function mseOk(x){ return useMSE && !x.hls && MediaSource.isTypeSupported(x.mime); }
+function slowNet(){
+  const c = navigator.connection;
+  return !!(c && (c.saveData || /(^|-)2g|3g/.test(c.effectiveType || "")));
+}
+function pickStart(){
+  /* при бавен мобилен интернет започваме направо с по-лекия линк */
+  qi = 0; failsHere = 0; stalls = [];
+  if(slowNet() && LINKS.length > 1) qi = 1;
+}
+function lighter(why){
+  if(qi >= LINKS.length - 1) return false;
+  qi++; failsHere = 0; stalls = [];
+  console.log("минавам на " + cur().name + ": " + why);
+  return true;
+}
+/* засичане: два пъти за две минути значи, че интернетът не стига за този линк */
+function noteStall(){
+  const now = Date.now();
+  stalls = stalls.filter(t => now - t < 120000);
+  if(stalls.length && now - stalls[stalls.length-1] < 10000) return false;   // едно и също засичане не се брои два пъти
+  stalls.push(now);
+  if(stalls.length >= 2 && lighter("засича")){ retry = 0; start(true); return true; }
+  return false;
+}
+/* линкът изобщо не тръгва: след два опита пробваме следващия, а накрая пак първия */
+function linkFailed(){
+  failsHere++;
+  if(failsHere >= 2 && LINKS.length > 1){
+    qi = (qi + 1) % LINKS.length; failsHere = 0; stalls = [];
+    console.log("линкът не работи, пробвам " + cur().name);
+  }
+}
+
+/* Кутията казва за всеки поток на сървъра качеството и вида му (MP3 или AAC):
+   видът се поправя сам, а по-лекият поток става резервен */
+function applyStreams(list){
+  if(!R || !list || !list.length) return;
+  const byPath = {};
+  list.forEach(x => { if(x.path) byPath[x.path] = x; });
+  R.streams.forEach(l => {
+    const x = byPath[l.url.replace(/^https?:\/\/[^/]+/, "")]; if(!x) return;
+    const c = String(x.content || "").toLowerCase();
+    const real = /aac/.test(c) ? "audio/aac" : /mpeg|mp3/.test(c) ? "audio/mpeg" : "";
+    if(real) l.mime = real;
+  });
+  orderByBitrate(list.map(x => ({ listenurl: x.path, bitrate: x.bitrate })));
+}
+/* Ако сървърът казва качеството на всеки линк, по-лекият става резервен, каквото и да е разширението му */
+let ordered = false;
+function orderByBitrate(list){
+  if(ordered || wantPlaying) return;
+  const kbps = {};
+  list.forEach(x=>{ const u=(x.listenurl||"").replace(/^https?:\/\/[^/]+/,""); const b=+(x.bitrate||x.audio_bitrate||x["ice-bitrate"]||0); if(u && b) kbps[u]=b>1000?b/1000:b; });
+  const k = l => kbps[l.url.replace(/^https?:\/\/[^/]+/,"")];
+  const direct = LINKS.filter(l=>!l.hls && k(l)), rest = LINKS.filter(l=>!(!l.hls && k(l)));
+  if(direct.length < 2) return;
+  direct.sort((a,b)=>k(b)-k(a));
+  LINKS.splice(0, LINKS.length, ...direct, ...rest);
+  ordered = true;
+}
+
+function liveUrl(){ const u = cur().url; return cur().hls ? u : u + (u.includes("?")?"&":"?") + "t=" + Date.now(); }
+function ahead(){ try{ const b=audio.buffered; return b.length ? b.end(b.length-1) - audio.currentTime : 0; }catch(e){ return 0; } }
+function endMSE(){
+  if(!mse) return;
+  try{ mse.ctrl.abort(); }catch(e){}
+  mse.done = true; mse = null;
+}
+
+function startMSE(){
+  endMSE();
+  const ms = new MediaSource(), ctrl = new AbortController();
+  const m = { ms, sb:null, ctrl, queue:[], done:false, gotData:false };
+  mse = m;
+  audio.src = URL.createObjectURL(ms);
+  ms.addEventListener("sourceopen", async ()=>{
+    if(m.done) return;
+    try{ m.sb = ms.addSourceBuffer(cur().mime); m.sb.mode = "sequence"; }catch(e){ fallbackPlain(); return; }
+    m.sb.addEventListener("updateend", ()=>pump(m));
+    let res;
+    try{ res = await fetch(liveUrl(), { signal: ctrl.signal, cache: "no-store" }); }
+    catch(e){ if(m.done) return; if(!m.gotData){ linkFailed(); reconnect(); } else reconnect(); return; }
+    if(!res.ok || !res.body){ if(!m.gotData) linkFailed(); reconnect(); return; }
+    /* сървърът казва какъв е потокът: ако е друг вид (MP3 или AAC), почваме наново с правилния */
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    const real = /aac/.test(ct) ? "audio/aac" : /mpeg|mp3/.test(ct) ? "audio/mpeg" : "";
+    if(real && real !== cur().mime && MediaSource.isTypeSupported(real)){ cur().mime = real; m.done = true; try{ ctrl.abort(); }catch(e){} startMSE(); return; }
+    const reader = res.body.getReader();
+    try{
+      for(;;){
+        const r = await reader.read();
+        if(m.done) return;
+        if(r.done) break;
+        m.gotData = true; m.queue.push(r.value); pump(m);
+      }
+      if(!m.done) reconnect();          // сървърът затвори връзката
+    }catch(e){ if(!m.done) reconnect(); }
+  }, { once:true });
+}
+function pump(m){
+  if(m.done || !m.sb || m.sb.updating) return;
+  /* чистим стария звук, за да не расте паметта */
+  try{ const b=m.sb.buffered; if(b.length && audio.currentTime - b.start(0) > 40){ m.sb.remove(b.start(0), audio.currentTime - 20); return; } }catch(e){}
+  if(m.queue.length){
+    let len=0; m.queue.forEach(c=>len+=c.length);
+    const data=new Uint8Array(len); let o=0; m.queue.forEach(c=>{ data.set(c,o); o+=c.length; }); m.queue=[];
+    try{ m.sb.appendBuffer(data); }catch(e){ if(e.name==="QuotaExceededError"){ m.queue.unshift(data); } else reconnect(); }
+  }
+  /* тръгваме, щом има достатъчно запас */
+  if(wantPlaying && audio.paused && ahead() >= (starting ? BUFFER_START : BUFFER_RESUME)){
+    const p = audio.play(); if(p && p.catch) p.catch(()=>{});
+  }
+  /* след засечка в интернета възстановяваме запаса незабележимо: свирим с 3% по-бавно, докато се натрупа */
+  if(!audio.paused){
+    const a = ahead();
+    try{ audio.preservesPitch = true; }catch(e){}
+    if(a < BUFFER_RESUME && audio.playbackRate !== 0.97) audio.playbackRate = 0.97;
+    else if(a >= BUFFER_START + 1 && a <= 10 && audio.playbackRate !== 1) audio.playbackRate = 1;
+    else if(a > 10 && audio.playbackRate !== 1.03) audio.playbackRate = 1.03;
+  }
+  /* ако сме изостанали много от живото излъчване, скачаме напред */
+  if(!audio.paused && ahead() > MAX_AHEAD){ try{ audio.currentTime = audio.buffered.end(audio.buffered.length-1) - BUFFER_START; }catch(e){} }
+}
+function fallbackPlain(){
+  useMSE = false; endMSE();   // само до затваряне на приложението; следващия път пробва пак
+  if(wantPlaying) start(true);
+}
+
+function start(keepLink){
+  if(!wantPlaying && keepLink !== true) pickStart();   // ново пускане: пак от най-добрия линк, който интернетът позволява
+  wantPlaying = true; starting = true; pausedAt = 0;
+  if(!LINKS.length){ wantPlaying=false; setUi(false); setStatus("Това радио още няма линк за слушане."); say("Това радио още няма линк за слушане."); return; }
+  setStatus("Свързване…"); if(!announced && retry===0) say("Свързване");
+  lastCT = -1; lastCTAt = Date.now();
+  setUi(true);
+  if(mseOk(cur())){ startMSE(); }
+  else {
+    endMSE();
+    audio.src = liveUrl();
+    audio.play().catch(()=>{ if(retry===0 && !audio.src){ setStatus("Не успях да пусна звука. Натиснете отново."); wantPlaying=false; setUi(false); } });
+  }
+}
+/* Пауза: спира звука, но оставя плейъра "жив", за да работят бутоните на заключения екран
+   и жестът с два пръста на TalkBack. */
+function pauseRadio(silent){
+  wantPlaying = false; starting = false; clearTimeout(retryTimer); retry = 0; announced = false;
+  endMSE(); audio.pause(); pausedAt = Date.now();
+  setUi(false); setStatus("Спряно.");
+  if(!silent) say("Спряно");
+}
+function stop(silent){ pauseRadio(silent); }
+playBtn.addEventListener("click", ()=> wantPlaying ? pauseRadio() : start());
+
+audio.addEventListener("playing", ()=>{
+  starting = false; retry = 0; failsHere = 0; lastCTAt = Date.now(); setStatus("Свири",true);
+  if(!announced){ announced=true; say("Радиото свири"); }
+});
+audio.addEventListener("waiting", ()=>{
+  if(!wantPlaying) return;
+  setStatus("Зареждане…");
+  if(!starting && noteStall()) return;   // засича често: минаваме на по-лекия линк
+  /* при изчерпан запас изчакваме да се натрупа отново, вместо да засича на парчета */
+  if(mse && ahead() < 0.5){ audio.pause(); }
+});
+/* Ако телефонът спре звука сам (обаждане, извадени слушалки), отразяваме го */
+audio.addEventListener("pause", ()=>{
+  if(wantPlaying && !starting && !mse && audio.readyState >= 3){ wantPlaying=false; setUi(false); setStatus("Спряно."); }
+});
+function reconnect(){
+  if(!wantPlaying) return;
+  if(!starting && noteStall()) return;   // засича често: минаваме на по-лекия линк
+  retry++; const wait = retry===1 ? 1 : Math.min(20, 3*retry);
+  setStatus("Връзката прекъсна. Свързвам се отново…");
+  if(retry===2) say("Връзката прекъсна, свързвам се отново");
+  endMSE();
+  clearTimeout(retryTimer); retryTimer = setTimeout(()=>start(true), wait*1000);
+}
+audio.addEventListener("error", ()=>{ if(wantPlaying && !mse){ if(starting) linkFailed(); reconnect(); } });
+audio.addEventListener("ended", ()=>{ if(!mse) reconnect(); });
+/* Пазач: гледа направо часовника на плейъра. Рестартира само ако звукът стои на едно място над 25 секунди. */
+setInterval(()=>{
+  if(!wantPlaying){ if(pausedAt && Date.now()-pausedAt > 10*60000 && audio.getAttribute("src")){ audio.removeAttribute("src"); audio.load(); pausedAt=0; } return; }
+  const ct = audio.currentTime;
+  if(ct !== lastCT){ lastCT = ct; lastCTAt = Date.now(); return; }
+  if(Date.now() - lastCTAt > 25000) reconnect();
+}, 5000);
+window.addEventListener("online", ()=>{ if(wantPlaying && Date.now()-lastCTAt > 8000){ retry=0; start(true); } });
+
+/* Бутони на заключения екран и в известията */
+if("mediaSession" in navigator){
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:APP_NAME, artist:"На живо",
+    artwork:[{src:"icon-512.png",sizes:"512x512",type:"image/png"}]
+  });
+  navigator.mediaSession.setActionHandler("play", ()=>{ if(!wantPlaying) start(); });
+  navigator.mediaSession.setActionHandler("pause", ()=>pauseRadio(true));
+  try{ navigator.mediaSession.setActionHandler("stop", ()=>pauseRadio(true)); }catch(e){}
+}
+
+/* Таймер за заспиване */
+document.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  clearTimeout(sleepTimer); clearInterval(sleepTick);
+  const m = +b.dataset.min;
+  if(!m){ $("timerInfo").textContent="Таймерът е изключен."; say("Таймерът е изключен"); return; }
+  sleepEnd = Date.now()+m*60000;
+  sleepTimer = setTimeout(()=>{
+    stop(true); setStatus("Радиото спря от таймера.");
+    document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed", x.dataset.min==="0"?"true":"false"));
+    $("timerInfo").textContent="Таймерът е изключен."; clearInterval(sleepTick);
+  }, m*60000);
+  const upd=()=>{ const left=Math.max(0,Math.ceil((sleepEnd-Date.now())/60000)); setText($("timerInfo"),"Радиото ще спре след "+left+" мин."); };
+  upd(); sleepTick=setInterval(upd,30000);
+  say("Радиото ще спре след "+m+" минути");
+}));
+
+/* Споделяне */
+$("share").addEventListener("click", async ()=>{
+  const url = location.href.split("#")[0] + (R ? "#" + R.id : "");
+  const info=$("shareInfo");
+  try{
+    if(navigator.share){ await navigator.share({title:rName(),text:"Слушай "+rName()+"! Отвори линка и следвай стъпката най-горе, за да го сложиш на телефона си:",url}); return; }
+    await navigator.clipboard.writeText(url);
+    info.textContent="Линкът е копиран: "+url; info.hidden=false; say("Линкът е копиран");
+  }catch(e){
+    if(e && e.name==="AbortError") return;
+    info.textContent="Изпратете този линк: "+url; info.hidden=false;
+  }
+});
+
+/* Съобщения от радиото */
+let lastMsg = null;
+async function checkMessage(){
+  if(document.hidden) return;
+  try{
+    const r = await fetch(MESSAGE_FILE+"?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) return;
+    const t = (await r.text()).trim();
+    if(t===lastMsg) return;
+    const first = lastMsg===null; lastMsg = t;
+    $("msgBox").hidden = !t; $("msgText").textContent = t;
+    if(t){
+      if(!first){ sayLoud("Ново съобщение от радиото: "+t); beep(); if(navigator.vibrate) navigator.vibrate(200); }
+    }
+  }catch(e){}
+}
+function beep(){
+  try{ const c=new (window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain();
+    o.frequency.value=880; g.gain.value=0.08; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+0.25);
+  }catch(e){}
+}
+checkMessage(); setInterval(checkMessage, MESSAGE_CHECK_SECONDS*1000);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) checkMessage(); });
+
+/* Име на песента: показва се само когато радиото го изпраща.
+   Ако изключиш заглавието от програмата за излъчване, полето изчезва само. */
+let nowKey = "";
+function showSong(title, artist, cover){
+  title=(title||"").trim(); artist=(artist||"").trim();
+  if(!artist && title.includes(" - ")){ const p=title.split(" - "); artist=p.shift().trim(); title=p.join(" - ").trim(); }
+  if(!title || /^(unknown|-|n\/a)$/i.test(title)){ if(!$("nowBox").hidden){ setHid($("nowBox"),true); setText($("song"),""); nowKey=""; resetMeta(); } return; }
+  const key=title+"|"+artist+"|"+(cover||"");
+  if(key===nowKey && !$("nowBox").hidden) return; nowKey=key;
+  setText($("song"), title);
+  setText($("artist"), artist); setHid($("artist"), !artist);
+  const img=$("cover");
+  if(cover){ img.onload=()=>{ setHid(img,false); setHid($("eq"),true); }; img.onerror=()=>{ setHid(img,true); setHid($("eq"),false); }; img.src=cover; }
+  else { setHid(img,true); setHid($("eq"),false); img.removeAttribute("src"); }
+  setHid($("nowBox"),false);
+  if("mediaSession" in navigator){
+    try{ navigator.mediaSession.metadata = new MediaMetadata({ title, artist: artist || rName(), album:rName(),
+      artwork: cover ? [{src:cover,sizes:"600x600",type:"image/jpeg"}] : [{src:rLogo(),sizes:"512x512",type:"image/png"}] }); }catch(e){}
+  }
+}
+function resetMeta(){
+  if("mediaSession" in navigator){ try{ navigator.mediaSession.metadata = new MediaMetadata({ title:rName(), artist:"На живо",
+    artwork:[{src:rLogo(),sizes:"512x512",type:"image/png"}] }); }catch(e){} }
+}
+function jsonp(url){ return new Promise((ok,bad)=>{ const cb="cb"+Date.now(), sc=document.createElement("script");
+  window[cb]=d=>{ ok(d); delete window[cb]; sc.remove(); }; sc.onerror=()=>{ bad(); delete window[cb]; sc.remove(); };
+  sc.src=url+"&callback="+cb; document.head.appendChild(sc); setTimeout(()=>bad(),8000); }); }
+/* Името на песента идва от Кутията: тя пита сървъра на потока вместо браузъра и намира и обложката. */
+let songFails=0, songSeq=0;
+async function checkSong(){
+  if(!SHOW_SONG || !R || !/^https:\/\//.test(MAILBOX_URL) || songFails>=5 || (document.hidden && !wantPlaying)) return;
+  const my=++songSeq, rid=R.id;
+  try{
+    const d = await fetch(MAILBOX_URL+"?action=now&r="+rid+"&t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
+    if(my!==songSeq || !R || R.id!==rid) return;      // междувременно е избрано друго радио
+    if(d && d.ok){ showSong(d.title, d.artist, d.cover); applyStreams(d.streams); songFails=0; } else songFails++;
+  }catch(e){ songFails++; }
+}
+checkSong(); setInterval(checkSong, 20000);
+
+
+/* ===== Карта "добре дошли": показва само следващата стъпка ===== */
+const UA = navigator.userAgent;
+const IS_IOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+const IS_ANDROID = /Android/i.test(UA);
+const IN_APP = /FBAN|FBAV|FB_IAB|Instagram|Messenger|Viber|Line\/|MicroMessenger|TikTok|; wv\)/i.test(UA);
+const IOS_OTHER = IS_IOS && /CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/.test(UA);
+const STANDALONE = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+let installEvt = null, OS = null, justInstalled = false;
+const ICON_SHARE = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span>';
+const ICON_MORE  = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></span>';
+const ICON_PLUS  = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>';
+const ICON_DOTS  = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="19" r="1.3"/></svg></span>';
+
+function hiddenUntil(k){ try{ return +localStorage.getItem("ob_"+k)||0; }catch(e){ return 0; } }
+function hideFor(k,days){ try{ localStorage.setItem("ob_"+k, Date.now()+days*864e5); }catch(e){} }
+
+function pickCard(){
+  if(justInstalled) return {k:"done", t:APP_NAME+" вече е на началния ви екран.", b:"<p>Отваряйте ни от иконката „Наздраве“, когато пожелаете. Благодарим, че сте с нас!</p>", later:false};
+  if(!STANDALONE){
+    if(IN_APP) return {k:"inapp", t:"Отворете приложението в браузъра", b: "<p>Едно натискане и продължавате в "+(IS_IOS?"Safari":"Chrome")+", откъдето радиото се слага на телефона.</p>",
+      a: IS_IOS ? "Отвори в Safari" : "Отвори в Chrome", fn: openExternal};
+    if(installEvt) return {k:"install", t:"Инсталирайте "+APP_NAME, b:"<p>Нека любимите ви радиа бъдат винаги с вас.</p>", a:"Инсталирай", fn:doInstall};
+    if(IOS_OTHER) return {k:"iosother", t:"Отворете в Safari", b:"<p>На iPhone приложението се добавя най-лесно от Safari. Копирайте адреса и го отворете в Safari.</p>", a:"Копирай адреса", fn:copyUrl};
+    if(IS_IOS) return {k:"ios", t:"Инсталирайте "+APP_NAME, b:
+      "<p>Нека любимите ви радиа бъдат винаги с вас.</p><ol><li><span>Натиснете "+ICON_MORE+" или "+ICON_SHARE+" в долната част на екрана.</span></li>"+
+      "<li><span>Изберете „Сподели“ "+ICON_SHARE+", после „Към начален екран“ "+ICON_PLUS+". Ако не го виждате, плъзнете списъка надолу.</span></li>"+
+      "<li>Натиснете „Добави“ горе вдясно.</li></ol>"};
+    if(IS_ANDROID) return {k:"android", t:"Инсталирайте "+APP_NAME, b:
+      "<p>Нека любимите ви радиа бъдат винаги с вас.</p><ol><li><span>Натиснете "+ICON_DOTS+" горе вдясно в Chrome.</span></li><li>Изберете „Инсталиране на приложението“ (на някои телефони пише „Добавяне към началния екран“).</li></ol>"};
+  }
+  if(notifPossible()) return {k:"notif", t:"Искате ли да научавате първи?", b:"<p>Ще ви известяваме за предаванията и новините на радиото и кога ще прозвучи вашият поздрав.</p>", a:"Да, включи известията", fn:enableNotif};
+  return null;
+}
+function renderOnboard(){
+  let c = pickCard();
+  if(c && hiddenUntil(c.k) > Date.now()) c = null;
+  const box=$("onboard");
+  document.body.classList.toggle("ob", !!c);
+  if(!c){ box.hidden=true; return; }
+  const changed = box.dataset.k !== c.k || box.hidden;
+  if(!changed && box.dataset.b === c.b) return;
+  box.dataset.k = c.k; box.dataset.b = c.b;
+  setText($("obTitle"),c.t); $("obBody").innerHTML=c.b;
+  const a=$("obAction"); a.hidden=!c.a; if(c.a){ a.textContent=c.a; a.onclick=c.fn; }
+  $("obLater").hidden = c.later===false;
+  $("obLater").onclick=()=>{ hideFor(c.k, c.k==="notif"?3:7); box.hidden=true; document.body.classList.remove("ob"); say("Скрито"); };
+  box.hidden=false;
+  if(changed && c.k!=="notif") say(c.t);
+}
+async function doInstall(){
+  if(!installEvt) return;
+  installEvt.prompt();
+  try{ const r = await installEvt.userChoice; if(r.outcome==="accepted"){ justInstalled=true; } }catch(e){}
+  installEvt=null; renderOnboard();
+}
+function openExternal(){
+  const url=location.href.split("#")[0], rest=url.replace(/^https?:\/\//,"");
+  if(IS_IOS){ location.href="x-safari-https://"+rest; }
+  else { location.href="intent://"+rest+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(url)+";end"; }
+  setTimeout(()=>{ $("obBody").innerHTML="<p>Ако нищо не стана: натиснете трите точки горе вдясно и изберете „Отвори в "+(IS_IOS?"Safari":"браузъра")+"“.</p>"; say("Ако нищо не стана, натиснете трите точки горе вдясно и изберете Отвори в браузъра."); },2500);
+}
+async function copyUrl(){
+  const url=location.href.split("#")[0];
+  try{ await navigator.clipboard.writeText(url); say("Адресът е копиран. Отворете Safari и го поставете."); }
+  catch(e){ $("obBody").innerHTML += "<p>"+url+"</p>"; }
+}
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); installEvt=e; renderOnboard(); });
+window.addEventListener("appinstalled", ()=>{ justInstalled=true; installEvt=null; renderOnboard(); });
+renderOnboard();
+
+
+/* ===== Пиши на радиото ===== */
+const MB_ON = /^https:\/\//.test(MAILBOX_URL);
+let mbOpen = null, mbFormOpen = false;
+function myId(){
+  let v = store("nz_id");
+  if(!v){ v = ((crypto.randomUUID && crypto.randomUUID()) || (Math.random().toString(36).slice(2)+Date.now().toString(36)+Math.random().toString(36).slice(2))).replace(/[^a-z0-9]/g,"").slice(0,32); store("nz_id",v); window._nzid=v; }
+  return v || window._nzid;
+}
+function mbGet(params){
+  const q = new URLSearchParams(params).toString();
+  const ctl = new AbortController(), tm = setTimeout(()=>ctl.abort(), 20000);   // увиснала заявка не чака вечно
+  return fetch(MAILBOX_URL + "?" + q, {cache:"no-store", signal:ctl.signal}).then(r=>r.json()).finally(()=>clearTimeout(tm));
+}
+let airHost = null;
+function setAirInfo(d){
+  const host = d.host || "";
+  if(airHost===host) return; airHost = host;
+  const txt = host ? "В ефир: " + host : "В момента няма никой в ефир.";
+  setText($("airLine"), txt); setHid($("airLine"), false);
+  setText($("wNote"), host ? "Поздравите се четат в ефир сега." : "Можеш да пишеш, когато има водещ в ефир.");   // не повтаря реда „В ефир“ горе
+  if("mediaSession" in navigator && navigator.mediaSession.metadata){ try{ navigator.mediaSession.metadata.artist = host ? "с " + host : rName(); }catch(e){} }
+  renderPick();
+}
+function setMbOpen(open){
+  const was = mbOpen; mbOpen = !!open;
+  if(was===mbOpen) return;
+  const t=$("wToggle");
+  setHid($("writeBox"),false);
+  if(mbOpen){
+    t.removeAttribute("aria-disabled"); t.classList.add("on");
+    t.textContent = mbFormOpen ? "Скрий" : "Напиши поздрав";
+  } else {
+    t.setAttribute("aria-disabled","true"); t.classList.remove("on");
+    t.textContent = "Напиши поздрав";
+    mbFormOpen = false; $("wForm").hidden = true; t.setAttribute("aria-expanded","false");
+  }
+}
+function applyState(d){
+  setAirInfo(d); setMbOpen(d.open);
+  const sl=$("supportLink");
+  if(d.radio){ if(sl.getAttribute("href")!==d.radio) sl.href=d.radio; setHid(sl,false); } else setHid(sl,true);
+}
+let mineSig="";
+function renderMine(items){
+  const sig=JSON.stringify(items.map(m=>[m.key,m.reply||""]))+(R?R.id:"");
+  if(sig===mineSig) return; mineSig=sig;
+  const list=$("wList"); list.innerHTML="";
+  setHid($("wMine"), !items.length);
+  let seen = +(store("nz_seen")||0), newest = seen, fresh = [];
+  items.forEach(m=>{
+    const li=document.createElement("li");
+    const a=document.createElement("div"); a.className="who"; const ro = m.r && R && m.r!==R.id && radioById(m.r); a.textContent = ro ? "Твоят поздрав до " + ro.name : "Твоят поздрав"; li.appendChild(a);
+    const p=document.createElement("div"); p.textContent=m.text; li.appendChild(p);
+    const r=document.createElement("div"); r.className="rep";
+    const rw=document.createElement("div"); rw.className="who";
+    const rt=document.createElement("div");
+    if(m.reply){ rw.textContent="Отговор от радиото"; rt.textContent=m.reply; if(m.rt>seen) fresh.push(m.reply); if(m.rt>newest) newest=m.rt; }
+    else { rw.textContent="Очаква се"; }
+    r.appendChild(rw); if(m.reply) r.appendChild(rt); li.appendChild(r);
+    list.appendChild(li);
+  });
+  if(fresh.length){ store("nz_seen", String(newest)); sayLoud("Отговор от радиото: " + fresh.join(". ")); beep(); if(navigator.vibrate) navigator.vibrate(200); }
+}
+async function mbPoll(){
+  if(!MB_ON || document.hidden) return;
+  const rid = R ? R.id : "";
+  try{
+    const d = store("nz_sent") ? await mbGet({action:"replies", id:myId(), r:rid}) : await mbGet({action:"status", r:rid});
+    if(d.hosts) hosts = d.hosts;
+    if((R ? R.id : "") !== rid) return;
+    if(R){ applyState(d); if(d.items) renderMine(d.items); } else renderPick();
+  }catch(e){}
+}
+if(MB_ON){
+  const MAXC = 150;
+  /* име: пита се само първия път */
+  function showName(){
+    const n = store("nz_name") || "";
+    const has = !!n;
+    setHid($("wNameRow"), has); setHid($("wAs"), !has);
+    if(has) setText($("wAsText"), "Пишете като " + n + ".");
+    $("wName").value = n;
+  }
+  showName();
+  $("wAsChange").addEventListener("click", ()=>{ setHid($("wNameRow"), false); setHid($("wAs"), true); $("wName").focus(); $("wName").select(); });
+  $("wName").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); $("wText").focus(); } });
+  $("wToggle").addEventListener("click", ()=>{
+    if(!mbOpen){ say("В момента няма никой в ефир."); return; }
+    mbFormOpen = !mbFormOpen; $("wForm").hidden = !mbFormOpen;
+    $("wToggle").setAttribute("aria-expanded", mbFormOpen?"true":"false");
+    $("wToggle").textContent = mbFormOpen ? "Скрий" : "Напиши поздрав";
+    if(mbFormOpen){ (store("nz_name") ? $("wText") : $("wName")).focus(); }
+  });
+  /* брояч на знаците: вижда се винаги, а четецът казва само близо до края */
+  let lastWarn = null;
+  $("wText").addEventListener("input", ()=>{
+    const left = MAXC - $("wText").value.length;
+    setText($("wCount"), $("wText").value.length + " / " + MAXC);
+    const step = left<=0 ? 0 : left<=5 ? 5 : left<=10 ? 10 : left<=20 ? 20 : null;
+    if(step!==null && step!==lastWarn){ lastWarn=step; say(left<=0 ? "Достигнахте края, 150 знака." : "Остават " + left + " знака."); }
+    if(step===null) lastWarn=null;
+  });
+  $("wText").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); $("wSend").click(); } });
+
+  /* пауза между поздравите */
+  let waitTimer = null;
+  function minsLeft(){ return Math.ceil(Math.max(0, (+(store("nz_next")||0)) - Date.now()) / 60000); }
+  function updWait(){
+    const b=$("wSend"), m=minsLeft(), w=$("wWait");
+    if(m>0){
+      setAttr(b,"aria-disabled","true"); setAttr(b,"aria-label","Изпрати, ще е възможно след " + m + " " + (m===1?"минута":"минути"));
+      setText(w, "Ще можете да пратите следващ поздрав след " + m + " " + (m===1?"минута":"минути") + "."); setHid(w,false);
+    } else {
+      setAttr(b,"aria-disabled",null); setAttr(b,"aria-label","Изпрати"); setHid(w,true);
+      clearInterval(waitTimer); waitTimer=null;
+    }
+  }
+  function startWait(sec){ store("nz_next", String(Date.now()+sec*1000)); updWait(); clearInterval(waitTimer); waitTimer=setInterval(updWait, 15000); }
+  if(minsLeft()>0){ updWait(); waitTimer=setInterval(updWait, 15000); }
+
+  let sending = false;
+  $("wSend").addEventListener("click", async ()=>{
+    if(sending) return;
+    const m=minsLeft();
+    if(m>0){ say("Ще можете да пратите следващ поздрав след " + m + " " + (m===1?"минута":"минути") + "."); return; }
+    const text=$("wText").value.trim(), name=$("wName").value.trim();
+    if(!text){ say("Напишете поздрав."); $("wText").focus(); return; }
+    sending = true;
+    try{
+      const sub = (OS && OS.User && OS.User.PushSubscription && OS.User.PushSubscription.id) || "";
+      const d = await mbGet({action:"send", id:myId(), name, text, sub, r:R.id});
+      if(d.ok){
+        $("wText").value=""; setText($("wCount"), "0 / " + MAXC); lastWarn=null;
+        store("nz_sent","1"); if(name){ store("nz_name",name); showName(); }
+        say("Поздравът е изпратен. Благодарим!");
+        startWait(d.wait || 600); mbPoll(); $("wText").focus();
+        /* тихата линия за подкрепа: най-много веднъж на ден, без да се чете на глас */
+        const today = new Date().toDateString();
+        if(d.tip && store("nz_tipday")!==today){ $("wTipLink").href=d.tip; setHid($("wTip"),false); store("nz_tipday",today); }
+      }
+      else if(d.error==="closed"){ setMbOpen(false); say("В момента няма никой в ефир."); }
+      else if(d.error==="too_fast"){ startWait(d.wait || 600); const mm=minsLeft(); say("Ще можете да пратите следващ поздрав след " + mm + " " + (mm===1?"минута":"минути") + "."); }
+      else { say("Не успях да изпратя. Опитайте пак."); }
+    }catch(e){ say("Няма връзка. Опитайте пак."); }
+    sending = false;
+  });
+  mbPoll(); setInterval(mbPoll, 30000);
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) mbPoll(); });
+}
+
+/* Работа като приложение */
+const DIR = location.pathname.replace(/[^\/]*$/,"");   // напр. /radio/
+/* ===== Известия: програмата на OneSignal се зарежда САМО при нужда =====
+   (ако човекът вече ги е включил или натисне "Включи известията"). Така приложението е по-леко за всички. */
+let osLoading = null;
+function loadOS(){
+  if(osLoading) return osLoading;
+  osLoading = new Promise(resolve=>{
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    const sc=document.createElement("script"); sc.src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"; sc.defer=true;
+    sc.onerror=()=>resolve(null); document.head.appendChild(sc);
+    OneSignalDeferred.push(async function(OneSignal){
+      try{
+        await OneSignal.init({ appId: ONESIGNAL_APP_ID, serviceWorkerPath: DIR.slice(1)+"sw.js", serviceWorkerParam:{scope:DIR},
+                               notifyButton:{enable:false}, promptOptions:{slidedown:{prompts:[]}} });
+        OS = OneSignal;
+        OneSignal.Notifications.addEventListener("permissionChange", refreshNotif);
+        OneSignal.User.PushSubscription.addEventListener("change", refreshNotif);
+        OneSignal.Notifications.addEventListener("foregroundWillDisplay", e=>{
+          const n=e.notification, t=[n.title,n.body].filter(x=>x && x!==APP_NAME).join(". ");
+          $("msgText").textContent=t; $("msgBox").hidden=false; sayLoud("Ново съобщение от радиото: "+t); beep();
+        });
+        resolve(OneSignal);
+      }catch(e){ resolve(null); }
+      refreshNotif();
+    });
+  });
+  return osLoading;
+}
+function notifOn(){
+  if(OS) return !!(OS.Notifications.permission && OS.User.PushSubscription.optedIn);
+  return store("nz_push")==="1" && PUSH_OK && Notification.permission==="granted";
+}
+function notifPossible(){ return PUSH_OK && !notifOn() && Notification.permission!=="denied"; }
+function refreshNotif(){
+  const box=$("notifBox"), btn=$("notifBtn"), info=$("notifInfo");
+  setHid(box,false);
+  if(!PUSH_OK || (OS && !OS.Notifications.isPushSupported())){
+    setText(info, IS_IOS && !STANDALONE
+      ? "На iPhone известията работят, след като инсталирате приложението: бутон Сподели, после „Към начален екран“."
+      : "Този браузър не поддържа известия."); setHid(btn,true); renderOnboard(); return;
+  }
+  const on = notifOn();
+  let it = on ? "Известията са включени." : "Научавайте първи за предаванията и новините на радиото и кога ще прозвучи вашият поздрав.";
+  if(Notification.permission==="denied") it="Известията са забранени в настройките на телефона. Разрешете ги оттам за това приложение.";
+  setText(info, it);
+  setText(btn, on ? "Изключи известията" : "Включи известията");
+  setAttr(btn, "aria-pressed", on?"true":"false");
+  renderOnboard();
+}
+/* Включване: разрешението се иска веднага при натискането (иначе iPhone го отказва), после се зарежда OneSignal. */
+async function enableNotif(){
+  if(!PUSH_OK) return;
+  let perm = Notification.permission;
+  try{ if(perm==="default") perm = await Notification.requestPermission(); }catch(e){}
+  if(perm!=="granted"){ say("Известията не са разрешени."); refreshNotif(); return; }
+  setText($("notifInfo"),"Включвам…");
+  const os = await loadOS();
+  try{ if(os){ await os.User.PushSubscription.optIn(); } }catch(e){}
+  if(notifOn() || (os && os.Notifications.permission)){ store("nz_push","1"); say("Известията са включени. Благодарим!"); }
+  else say("Не успях да включа известията. Опитайте пак.");
+  refreshNotif();
+}
+async function disableNotif(){
+  const os = await loadOS();
+  try{ if(os) await os.User.PushSubscription.optOut(); }catch(e){}
+  store("nz_push","0"); say("Известията са изключени"); refreshNotif();
+}
+if(ONESIGNAL_APP_ID){
+  $("notifBtn").onclick = ()=>{ notifOn() ? disableNotif() : enableNotif(); };
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js",{scope:DIR}).catch(()=>{}); }
+  if(store("nz_push")==="1" || (PUSH_OK && Notification.permission==="granted")) loadOS();
+  refreshNotif();
+} else if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+
+/* ===== Избор на радио =====
+   Началният екран показва радиата. Адресът помни избора (#folk, #gold), затова бутонът „Назад“
+   на телефона връща към избора, а линк с #folk отваря направо това радио. */
+let hosts = {};                    // кой е в ефир във всяко радио, от Кутията
+function renderPick(){
+  const list=$("pickList");
+  RADIOS.forEach(x=>{
+    let b=list.querySelector('[data-r="'+x.id+'"]');
+    if(!b){
+      b=document.createElement("button"); b.type="button"; b.className="rcard"; b.dataset.r=x.id;
+      b.innerHTML='<img alt="" src="'+x.logo+'"><span><span class="rn"></span><span class="rs"></span></span>';
+      b.querySelector(".rn").textContent=x.name;
+      b.addEventListener("click",()=>{ location.hash=x.id; });
+      list.appendChild(b);
+    }
+    const playing = wantPlaying && R && R.id===x.id;
+    const h = hosts[x.id] || "";
+    const st = playing ? "Свири сега" : h ? "В ефир: " + h : "";
+    setText(b.querySelector(".rs"), st); setHid(b.querySelector(".rs"), !st);
+    b.classList.toggle("on", playing);
+    setAttr(b, "aria-label", x.name + (st ? ", " + st : ""));
+  });
+}
+function radioById(id){ return RADIOS.find(x=>x.id===id) || null; }
+function showPick(){
+  setHid($("radioView"),true); setHid($("back"),true); setHid($("pick"),false);
+  $("logo").src="icon-512.png"; setText($("title"),APP_NAME); document.title=APP_NAME;
+  renderPick();
+}
+function openRadio(x, fromUser){
+  const changed = !R || R.id!==x.id, was = wantPlaying;
+  if(changed){
+    if(wantPlaying) pauseRadio(true);
+    R = x; setLinks();
+    /* чистим всичко от предишното радио */
+    nowKey=""; songFails=0; songSeq++; setHid($("nowBox"),true); setText($("song"),""); resetMeta();
+    airHost=null; mbOpen=null; setHid($("airLine"),true);
+    setStatus("Натиснете „Пусни“, за да слушате.");
+  }
+  setHid($("pick"),true); setHid($("radioView"),false); setHid($("back"),false);
+  $("logo").src=x.logo; setText($("title"),x.name); document.title=x.name+" | "+APP_NAME;
+  if(fromUser) $("title").focus();   // четецът казва името от заглавието, без да го повтаря
+  if(changed){ if(was) start(); checkSong(); mbPoll(); }
+}
+function route(fromUser){
+  const x = radioById(location.hash.slice(1));
+  if(x) openRadio(x, fromUser);
+  else { showPick(); if(fromUser){ const b = R && $("pickList").querySelector('[data-r="'+R.id+'"]'); if(b) b.focus(); else $("title").focus(); } }
+}
+$("back").addEventListener("click",()=>{ if(history.length>1 && radioById(location.hash.slice(1)) && sessionStorage.getItem("nz_nav")) history.back(); else location.hash=""; });
+window.addEventListener("hashchange",()=>{ try{ sessionStorage.setItem("nz_nav","1"); }catch(e){} route(true); });
+/* бутонът Пусни/Спри сменя и надписа на картите в избора */
+audio.addEventListener("playing", renderPick); audio.addEventListener("pause", renderPick);
+if(RADIOS.length===1){ openRadio(RADIOS[0], false); setHid($("back"),true); } else route(false);
+</script>
+</body>
+</html>
