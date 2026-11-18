@@ -206,28 +206,28 @@ h1:focus{outline:none}
   <section class="box" aria-labelledby="nTitle" id="notifBox" hidden>
     <h2 id="nTitle">Известия от радиото</h2>
     <p class="note" id="notifInfo">Научавайте първи за предаванията и новините на радиото и кога ще прозвучи вашият поздрав.</p>
-    <button class="wide" id="notifBtn" type="button">Включи известията</button>
+    <button class="wide" id="notifBtn" type="button">Включете известията</button>
   </section>
 
   <section class="box" aria-labelledby="wTitle" id="writeBox" hidden>
-    <h2 id="wTitle">Пиши ни</h2>
+    <h2 id="wTitle">Пишете ни</h2>
     <p class="free">Поздравите в ефир са безплатни.</p>
     <p class="note airtxt" id="wNote">Проверявам…</p>
-    <button class="wide" id="wToggle" type="button" aria-expanded="false" aria-controls="wForm">Напиши поздрав</button>
+    <button class="wide" id="wToggle" type="button" aria-expanded="false" aria-controls="wForm">Напишете поздрав</button>
     <div id="wForm" hidden class="chat">
-      <div id="wNameRow" class="field"><label for="wName">Твоето име</label><input id="wName" maxlength="40" autocomplete="given-name" enterkeyhint="next"></div>
-      <p class="note" id="wAs" hidden><span id="wAsText"></span> <button type="button" class="linkbtn" id="wAsChange">Смени</button></p>
+      <div id="wNameRow" class="field"><label for="wName">Вашето име</label><input id="wName" maxlength="40" autocomplete="given-name" enterkeyhint="next"></div>
+      <p class="note" id="wAs" hidden><span id="wAsText"></span> <button type="button" class="linkbtn" id="wAsChange">Промени</button></p>
       <div class="chatrow">
         <label for="wText" class="sr">Поздрав</label>
-        <input id="wText" maxlength="150" autocomplete="off" enterkeyhint="send" placeholder="Напиши поздрав…">
-        <button id="wSend" type="button" class="sendbtn" aria-label="Изпрати"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5 21 12 3 3.5l.01 6.6L15 12 3.01 13.9z"/></svg></button>
+        <input id="wText" maxlength="150" autocomplete="off" enterkeyhint="send" placeholder="Напишете поздрав…">
+        <button id="wSend" type="button" class="sendbtn" aria-label="Изпратете"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5 21 12 3 3.5l.01 6.6L15 12 3.01 13.9z"/></svg></button>
       </div>
       <p class="note" id="wCount" aria-hidden="true">0 / 150</p>
       <p class="note" id="wWait" hidden></p>
     </div>
-    <p class="note" id="wTip" hidden>Ако смяташ, че се справяме добре и искаш да ни подкрепиш, можеш да го направиш <a id="wTipLink" href="#" target="_blank" rel="noopener">тук</a>.</p>
+    <p class="note" id="wTip" hidden>Ако смятате, че се справяме добре, и искате да ни подкрепите, можете да го направите <a id="wTipLink" href="#" target="_blank" rel="noopener">тук</a>.</p>
     <div id="wMine" hidden>
-      <h3 class="small" id="wMineTitle">Твоите поздрави</h3>
+      <h3 class="small" id="wMineTitle">Вашите поздрави</h3>
       <ul class="mine" id="wList" aria-labelledby="wMineTitle"></ul>
     </div>
   </section>
@@ -235,10 +235,10 @@ h1:focus{outline:none}
   </div>
 
   <section class="box" aria-labelledby="sTitle">
-    <h2 id="sTitle">Покани приятел</h2>
-    <button class="wide" id="share" type="button">Сподели приложението</button>
+    <h2 id="sTitle">Поканете приятел</h2>
+    <button class="wide" id="share" type="button">Споделете приложението</button>
     <p class="note" id="shareInfo" hidden></p>
-    <p class="note support"><a id="supportLink" href="#" target="_blank" rel="noopener" hidden>Подкрепи радиото</a></p>
+    <p class="note support"><a id="supportLink" href="#" target="_blank" rel="noopener" hidden>Подкрепете радиото</a></p>
   </section>
 
   <p class="note" style="text-align:center">Звукът се усилва и намалява с бутоните на телефона.</p>
@@ -647,9 +647,9 @@ function pickCard(){
   if(justInstalled) return {k:"done", t:APP_NAME+" вече е на началния ви екран.", b:"<p>Отваряйте ни от иконката „Наздраве и Gold“, когато пожелаете. Благодарим, че сте с нас!</p>", later:false};
   if(!STANDALONE){
     if(IN_APP) return {k:"inapp", t:"Отворете приложението в браузъра", b: "<p>Едно натискане и продължавате в "+(IS_IOS?"Safari":"Chrome")+", откъдето радиото се слага на телефона.</p>",
-      a: IS_IOS ? "Отвори в Safari" : "Отвори в Chrome", fn: openExternal};
-    if(installEvt) return {k:"install", t:"Инсталирайте "+APP_NAME, b:"<p>Нека любимите ви радиа бъдат винаги с вас.</p>", a:"Инсталирай", fn:doInstall};
-    if(IOS_OTHER) return {k:"iosother", t:"Отворете в Safari", b:"<p>На iPhone приложението се добавя най-лесно от Safari. Копирайте адреса и го отворете в Safari.</p>", a:"Копирай адреса", fn:copyUrl};
+      a: IS_IOS ? "Отворете в Safari" : "Отворете в Chrome", fn: openExternal};
+    if(installEvt) return {k:"install", t:"Инсталирайте "+APP_NAME, b:"<p>Нека любимите ви радиа бъдат винаги с вас.</p>", a:"Инсталирайте", fn:doInstall};
+    if(IOS_OTHER) return {k:"iosother", t:"Отворете в Safari", b:"<p>На iPhone приложението се добавя най-лесно от Safari. Копирайте адреса и го отворете в Safari.</p>", a:"Копирайте адреса", fn:copyUrl};
     if(IS_IOS) return {k:"ios", t:"Инсталирайте "+APP_NAME, b:
       "<p>Нека любимите ви радиа бъдат винаги с вас.</p><ol><li><span>Натиснете "+ICON_MORE+" или "+ICON_SHARE+" в долната част на екрана.</span></li>"+
       "<li><span>Изберете „Сподели“ "+ICON_SHARE+", после „Към начален екран“ "+ICON_PLUS+". Ако не го виждате, плъзнете списъка надолу.</span></li>"+
@@ -657,7 +657,7 @@ function pickCard(){
     if(IS_ANDROID) return {k:"android", t:"Инсталирайте "+APP_NAME, b:
       "<p>Нека любимите ви радиа бъдат винаги с вас.</p><ol><li><span>Натиснете "+ICON_DOTS+" горе вдясно в Chrome.</span></li><li>Изберете „Инсталиране на приложението“ (на някои телефони пише „Добавяне към началния екран“).</li></ol>"};
   }
-  if(notifPossible()) return {k:"notif", t:"Искате ли да научавате първи?", b:"<p>Ще ви известяваме за предаванията и новините на радиото и кога ще прозвучи вашият поздрав.</p>", a:"Да, включи известията", fn:enableNotif};
+  if(notifPossible()) return {k:"notif", t:"Искате ли да научавате първи?", b:"<p>Ще ви известяваме за предаванията и новините на радиото и кога ще прозвучи вашият поздрав.</p>", a:"Да, включете известията", fn:enableNotif};
   return null;
 }
 function renderOnboard(){
@@ -717,7 +717,7 @@ function setAirInfo(d){
   if(airHost===host) return; airHost = host;
   const txt = host ? "В ефир: " + host : "В момента няма никой в ефир.";
   setText($("airLine"), txt); setHid($("airLine"), false);
-  setText($("wNote"), host ? "Поздравите се четат в ефир сега." : "Можеш да пишеш, когато има водещ в ефир.");   // не повтаря реда „В ефир“ горе
+  setText($("wNote"), host ? "Поздравите се четат в ефир сега." : "Можете да пишете, когато има водещ в ефир.");   // не повтаря реда „В ефир“ горе
   if("mediaSession" in navigator && navigator.mediaSession.metadata){ try{ navigator.mediaSession.metadata.artist = host ? "с " + host : rName(); }catch(e){} }
   renderPick();
 }
@@ -728,10 +728,10 @@ function setMbOpen(open){
   setHid($("writeBox"),false);
   if(mbOpen){
     t.removeAttribute("aria-disabled"); t.classList.add("on");
-    t.textContent = mbFormOpen ? "Скрий" : "Напиши поздрав";
+    t.textContent = mbFormOpen ? "Скриване" : "Напишете поздрав";
   } else {
     t.setAttribute("aria-disabled","true"); t.classList.remove("on");
-    t.textContent = "Напиши поздрав";
+    t.textContent = "Напишете поздрав";
     mbFormOpen = false; $("wForm").hidden = true; t.setAttribute("aria-expanded","false");
   }
 }
@@ -749,7 +749,7 @@ function renderMine(items){
   let seen = +(store("nz_seen")||0), newest = seen, fresh = [];
   items.forEach(m=>{
     const li=document.createElement("li");
-    const a=document.createElement("div"); a.className="who"; const ro = m.r && R && m.r!==R.id && radioById(m.r); a.textContent = ro ? "Твоят поздрав до " + ro.name : "Твоят поздрав"; li.appendChild(a);
+    const a=document.createElement("div"); a.className="who"; const ro = m.r && R && m.r!==R.id && radioById(m.r); a.textContent = ro ? "Вашият поздрав до " + ro.name : "Вашият поздрав"; li.appendChild(a);
     const p=document.createElement("div"); p.textContent=m.text; li.appendChild(p);
     const r=document.createElement("div"); r.className="rep";
     const rw=document.createElement("div"); rw.className="who";
@@ -788,7 +788,7 @@ if(MB_ON){
     if(!mbOpen){ say("В момента няма никой в ефир."); return; }
     mbFormOpen = !mbFormOpen; $("wForm").hidden = !mbFormOpen;
     $("wToggle").setAttribute("aria-expanded", mbFormOpen?"true":"false");
-    $("wToggle").textContent = mbFormOpen ? "Скрий" : "Напиши поздрав";
+    $("wToggle").textContent = mbFormOpen ? "Скриване" : "Напишете поздрав";
     if(mbFormOpen){ (store("nz_name") ? $("wText") : $("wName")).focus(); }
   });
   /* брояч на знаците: вижда се винаги, а четецът казва само близо до края */
@@ -797,7 +797,7 @@ if(MB_ON){
     const left = MAXC - $("wText").value.length;
     setText($("wCount"), $("wText").value.length + " / " + MAXC);
     const step = left<=0 ? 0 : left<=5 ? 5 : left<=10 ? 10 : left<=20 ? 20 : null;
-    if(step!==null && step!==lastWarn){ lastWarn=step; say(left<=0 ? "Достигнахте края, 150 знака." : "Остават " + left + " знака."); }
+    if(step!==null && step!==lastWarn){ lastWarn=step; say(left<=0 ? "Достигнахте максимума от 150 знака." : "Остават " + left + " знака."); }
     if(step===null) lastWarn=null;
   });
   $("wText").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); $("wSend").click(); } });
@@ -808,10 +808,10 @@ if(MB_ON){
   function updWait(){
     const b=$("wSend"), m=minsLeft(), w=$("wWait");
     if(m>0){
-      setAttr(b,"aria-disabled","true"); setAttr(b,"aria-label","Изпрати, ще е възможно след " + m + " " + (m===1?"минута":"минути"));
+      setAttr(b,"aria-disabled","true"); setAttr(b,"aria-label","Ще можете да изпратите след " + m + " " + (m===1?"минута":"минути"));
       setText(w, "Ще можете да пратите следващ поздрав след " + m + " " + (m===1?"минута":"минути") + "."); setHid(w,false);
     } else {
-      setAttr(b,"aria-disabled",null); setAttr(b,"aria-label","Изпрати"); setHid(w,true);
+      setAttr(b,"aria-disabled",null); setAttr(b,"aria-label","Изпратете"); setHid(w,true);
       clearInterval(waitTimer); waitTimer=null;
     }
   }
@@ -851,7 +851,7 @@ if(MB_ON){
 /* Работа като приложение */
 const DIR = location.pathname.replace(/[^\/]*$/,"");   // напр. /radio/
 /* ===== Известия: програмата на OneSignal се зарежда САМО при нужда =====
-   (ако човекът вече ги е включил или натисне "Включи известията"). Така приложението е по-леко за всички. */
+   (ако човекът вече ги е включил или натисне "Включете известията"). Така приложението е по-леко за всички. */
 let osLoading = null;
 function loadOS(){
   if(osLoading) return osLoading;
@@ -894,7 +894,7 @@ function refreshNotif(){
   let it = on ? "Известията са включени." : "Научавайте първи за предаванията и новините на радиото и кога ще прозвучи вашият поздрав.";
   if(Notification.permission==="denied") it="Известията са забранени в настройките на телефона. Разрешете ги оттам за това приложение.";
   setText(info, it);
-  setText(btn, on ? "Изключи известията" : "Включи известията");
+  setText(btn, on ? "Изключете известията" : "Включете известията");
   setAttr(btn, "aria-pressed", on?"true":"false");
   renderOnboard();
 }
